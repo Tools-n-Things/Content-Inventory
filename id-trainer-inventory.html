@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Program Content Inventory · Trainer</title>
+<style>
+  :root {
+    --navy: #263746; --green: #77BC1F; --blue: #2172B7; --orange: #FF8300; --red: #d63b3b;
+    --navy-xlight: #eef1f4; --green-light: #f0f8e6; --orange-light: #fff4e6; --red-light: #fdf0f0; --blue-light: #eef5fd;
+    --text: #1a2730; --muted: #6b7f8c; --border: #d0dbe3; --white: #ffffff;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Roboto','Segoe UI',sans-serif; background: var(--navy-xlight); color: var(--text); min-height: 100vh; }
+
+  header { background: var(--navy); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .header-logo { width: 36px; height: 36px; background: var(--orange); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: white; }
+  .header-title { color: white; font-size: 15px; font-weight: 500; opacity: .85; }
+  .header-title span { color: var(--orange); font-weight: 700; opacity: 1; }
+  .save-state { color: rgba(255,255,255,.6); font-size: 12px; }
+
+  .page-hero { background: var(--navy); padding: 24px 32px 32px; border-bottom: 4px solid var(--orange); }
+  .page-hero h1 { color: white; font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  .page-hero p { color: rgba(255,255,255,.65); font-size: 14px; max-width: 760px; line-height: 1.5; }
+
+  .main { max-width: 1000px; margin: 0 auto; padding: 24px 24px 64px; }
+
+  .card { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+  .card-header { background: var(--navy); padding: 13px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .card-header h2 { color: white; font-size: 14px; font-weight: 600; }
+  .card-body { padding: 20px; }
+
+  label { display: block; font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 5px; letter-spacing: .5px; text-transform: uppercase; }
+  .req { color: var(--red); margin-left: 3px; }
+  input[type="text"], input[type="number"], input[type="date"], select, textarea { width: 100%; padding: 9px 11px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: inherit; color: var(--text); background: var(--white); transition: border-color .2s; }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid transparent; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(33,114,183,.18); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .field.invalid input, .field.invalid select, .field.invalid .cond-box { border-color: var(--red); }
+  .field-error { font-size: 11px; color: var(--red); margin-top: 4px; font-weight: 600; }
+
+  .btn { padding: 9px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all .2s; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
+  .btn:focus-visible { outline: 3px solid rgba(33,114,183,.4); outline-offset: 2px; }
+  .btn-green { background: var(--green); color: white; }
+  .btn-green:hover { background: #68a619; }
+  .btn-navy { background: var(--navy); color: white; }
+  .btn-navy:hover { background: #344d5e; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--navy); color: var(--navy); background: var(--navy-xlight); }
+  .btn-danger { background: var(--red-light); color: var(--red); border: 1px solid #f5a0a0; }
+  .btn-danger:hover { background: var(--red); color: white; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  .hint-box { background: linear-gradient(135deg, #1e4d6b, #263746); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 20px; }
+  .hint-box h3 { color: var(--green); font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .hint-box p { color: rgba(255,255,255,.78); font-size: 13px; line-height: 1.6; }
+  .hint-steps { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
+  .hint-step { background: rgba(255,255,255,.08); border-radius: var(--radius); padding: 10px 14px; flex: 1; min-width: 160px; }
+  .hs-num { color: var(--green); font-size: 18px; font-weight: 900; }
+  .hs-text { color: rgba(255,255,255,.75); font-size: 12px; margin-top: 2px; line-height: 1.4; }
+
+  .banner { border-radius: var(--radius); padding: 12px 16px; font-size: 13px; line-height: 1.5; margin-bottom: 16px; background: var(--orange-light); border: 1px solid #ffd199; color: #7a3e00; }
+  .banner.blue { background: var(--blue-light); border-color: #a8cef0; color: #0d4a80; }
+  .banner.green { background: var(--green-light); border-color: #b8de8a; color: #3a6600; }
+  .banner.red { background: var(--red-light); border-color: #f5a0a0; color: var(--red); }
+
+  /* condition + priority selectors */
+  .condition-sel { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cond-opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .cond-opt { position: relative; margin: 0; text-transform: none; letter-spacing: 0; }
+  .cond-box { padding: 6px 12px; border-radius: 6px; border: 2px solid var(--border); font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s; color: var(--muted); white-space: nowrap; }
+  .cond-opt input:focus-visible + .cond-box { outline: 3px solid rgba(33,114,183,.4); outline-offset: 2px; }
+  .cond-opt input:checked + .cond-box { color: white; border-color: transparent; }
+  .cond-opt:nth-child(1) input:checked + .cond-box { background: var(--green); }
+  .cond-opt:nth-child(2) input:checked + .cond-box { background: var(--blue); }
+  .cond-opt:nth-child(3) input:checked + .cond-box { background: var(--orange); }
+  .cond-opt:nth-child(4) input:checked + .cond-box { background: var(--red); }
+  .cond-opt:nth-child(5) input:checked + .cond-box { background: var(--navy); }
+
+  /* badges */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 5px; white-space: nowrap; }
+  .badge-green  { background: var(--green-light); color: #3a6600; border: 1px solid #b7df7a; }
+  .badge-blue   { background: var(--blue-light); color: #0d4a80; border: 1px solid #a8cef0; }
+  .badge-orange { background: var(--orange-light); color: #7a3e00; border: 1px solid #ffd199; }
+  .badge-red    { background: var(--red-light); color: var(--red); border: 1px solid #f5a0a0; }
+  .badge-muted  { background: var(--navy-xlight); color: var(--muted); border: 1px solid var(--border); }
+  .badge-navy   { background: var(--navy); color: white; border: 1px solid var(--navy); }
+
+  /* depends-on picker */
+  .dep-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-light); color: #0d4a80; border: 1px solid #a8cef0; border-radius: 14px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
+  .dep-chip.ref { background: var(--navy-xlight); color: var(--navy); border-color: var(--border); }
+  .dep-chip button { background: none; border: none; color: inherit; cursor: pointer; font-weight: 900; padding: 0; font-size: 15px; line-height: 1; }
+  .dep-suggestions { position: absolute; z-index: 20; background: white; border: 1.5px solid var(--border); border-radius: 8px; margin-top: 4px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,.12); width: 100%; }
+  .dep-suggestion-item { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  .dep-suggestion-item:hover { background: var(--blue-light); }
+  .dep-suggestion-item small { color: var(--muted); }
+
+  /* list */
+  .deliverable-list { display: flex; flex-direction: column; gap: 10px; }
+  .del-card { border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .del-card:hover { border-color: var(--blue); }
+  .del-card.has-dep { border-left: 4px solid var(--orange); }
+  .del-card.dep-critical { border-left: 4px solid var(--red); }
+  .del-card-header { background: var(--navy-xlight); padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; width: 100%; border: none; text-align: left; font-family: inherit; }
+  .del-num { width: 24px; height: 24px; background: var(--navy); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+  .del-title-display { flex: 1; font-size: 13px; font-weight: 600; color: var(--navy); }
+  .del-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .del-card-body { padding: 14px; background: white; display: none; }
+  .del-card-body.open { display: block; }
+  .del-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .del-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .dep-flag { background: var(--orange-light); border: 1px solid #ffd199; border-radius: var(--radius); padding: 8px 12px; margin-top: 8px; font-size: 12px; color: #7a3e00; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .stat { background: var(--navy-xlight); border-radius: var(--radius); padding: 8px 14px; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .stat b { display: block; font-size: 18px; color: var(--navy); }
+
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .small-note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  @media (max-width: 768px) {
+    .form-row, .form-row-3, .del-grid, .del-grid-2 { grid-template-columns: 1fr; }
+    header, .page-hero { padding-left: 16px; padding-right: 16px; }
+    .main { padding: 16px 16px 48px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="header-logo">ID</div>
+    <div class="header-title"><span>ID Toolkit</span> &middot; Content Inventory for Trainers</div>
+  </div>
+  <div class="save-state" id="saveState" role="status" aria-live="polite">Not saved yet</div>
+</header>
+
+<div class="page-hero">
+  <h1>Program Content Inventory</h1>
+  <p>List every piece of content in your program — what it is, how current it is, and how urgent it is. Your designer uses this to plan the work, so rough answers are fine. You don't need an account or any special tools.</p>
+</div>
+
+<div class="main">
+
+  <div class="hint-box">
+    <h3>How this works</h3>
+    <p>Your work saves in this browser as you go. When you're done — or any time you want to send the designer an update — download your file and email it to them. If several trainers share a program, each of you works on your own pieces and sends your own file.</p>
+    <div class="hint-steps">
+      <div class="hint-step"><div class="hs-num">1</div><div class="hs-text">Fill in your name and the program</div></div>
+      <div class="hint-step"><div class="hs-num">2</div><div class="hs-text">Add each piece of content you're responsible for</div></div>
+      <div class="hint-step"><div class="hs-num">3</div><div class="hs-text">Mark anything that has to be finished before something else</div></div>
+      <div class="hint-step"><div class="hs-num">4</div><div class="hs-text">Download your file and send it to your designer</div></div>
+    </div>
+  </div>
+
+  <div id="storageWarning"></div>
+
+  <!-- PROGRAM INFO -->
+  <div class="card">
+    <div class="card-header"><h2>Program info</h2></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="field"><label for="programName">Program name</label><input type="text" id="programName" placeholder="e.g., Meters | Entry-Level" oninput="syncMeta()" /></div>
+        <div class="field"><label for="trainerName">Your name</label><input type="text" id="trainerName" placeholder="Your name" oninput="syncMeta()" /></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="programLength">Total program length</label><input type="text" id="programLength" placeholder="e.g., 3 weeks, 15 days" oninput="syncMeta()" /></div>
+        <div class="field"><label for="audience">Target audience</label><input type="text" id="audience" placeholder="e.g., New hire field technicians" oninput="syncMeta()" /></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT -->
+  <div class="card">
+    <div class="card-header">
+      <h2 id="formTitle">Add a content piece</h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" id="cancelEditBtn" onclick="cancelEdit()" style="display:none">Cancel</button>
+        <button class="btn btn-green btn-sm" id="submitBtn" onclick="saveDeliverable()">+ Add to inventory</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-row-3">
+        <div class="field" id="f-name"><label for="f-name-input">Content name<span class="req">*</span></label><input type="text" id="f-name-input" placeholder="e.g., Meter Reading ILT — Day 1" /></div>
+        <div class="field">
+          <label for="f-type">Type of content</label>
+          <select id="f-type">
+            <option value="">— Select type —</option>
+            <option>ILT Session (live, in-person or virtual)</option>
+            <option>eLearning (self-paced online course)</option>
+            <option>Job Aid / Quick Reference Guide</option>
+            <option>Video</option>
+            <option>Assessment / Quiz</option>
+            <option>Facilitator Guide</option>
+            <option>Participant Workbook</option>
+            <option>SOP / Process Document</option>
+            <option>OJT / On-the-Job Practice</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-duration">How long does this take to go through?</label>
+          <div style="display:flex;gap:8px;">
+            <input type="number" id="f-duration" min="0" step="0.5" placeholder="e.g., 15" style="flex:1" />
+            <select id="f-duration-unit" style="width:110px" aria-label="Unit">
+              <option value="min" selected>Minutes</option>
+              <option value="hr">Hours</option>
+            </select>
+          </div>
+          <div class="field-hint">The actual length of the content itself — 15 minutes for a quick eLearning module, 2 hours for an ILT session. Not counting breaks or extra discussion.</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="f-desc">What does it cover?</label><input type="text" id="f-desc" placeholder="Brief description of what this content teaches or does" /></div>
+        <div class="field"><label for="f-location">Where does it live? (LMS path, folder, link)</label><input type="text" id="f-location" placeholder="e.g., LMS > Meters > Entry Level > Module 1" /></div>
+      </div>
+      <div class="form-row">
+        <div class="field" id="f-cond">
+          <label id="f-cond-label">Current condition<span class="req">*</span></label>
+          <div class="condition-sel" role="radiogroup" aria-labelledby="f-cond-label">
+            <label class="cond-opt"><input type="radio" name="cond" value="current" /><div class="cond-box">✓ Current &amp; Accurate</div></label>
+            <label class="cond-opt"><input type="radio" name="cond" value="minor" /><div class="cond-box">~ Minor Updates Needed</div></label>
+            <label class="cond-opt"><input type="radio" name="cond" value="outdated" /><div class="cond-box">⚠ Outdated</div></label>
+            <label class="cond-opt"><input type="radio" name="cond" value="broken" /><div class="cond-box">✕ Broken / Unusable</div></label>
+            <label class="cond-opt"><input type="radio" name="cond" value="doesnotexist" /><div class="cond-box">🆕 Doesn't Exist Yet</div></label>
+          </div>
+          <div class="field-hint" style="margin-top:6px">Pick "Doesn't Exist Yet" for anything you or Ops want that doesn't exist in the program today — any kind of content. Length and location are optional in that case; fill in whatever you already know about what should be built.</div>
+        </div>
+        <div class="field" id="f-needs">
+          <label for="f-needsUpdate">Priority to address<span class="req">*</span></label>
+          <select id="f-needsUpdate">
+            <option value="">— Select —</option>
+            <option value="yes-urgent">🔴 Urgent — learners are getting wrong info now</option>
+            <option value="yes-soon">🟠 Before next delivery</option>
+            <option value="yes-eventually">🔵 Eventually, not urgent</option>
+            <option value="no">🟢 Not needed right now</option>
+          </select>
+          <div class="field-hint">You know best what can't wait. Your designer uses this to decide what gets worked on first — it's separate from Condition, which only describes the state it's in today.</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="f-dep-search">Depends on <span style="font-weight:400;text-transform:none;color:var(--muted);font-size:11px">(pieces that must be done first)</span></label>
+          <div id="f-dep-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;"></div>
+          <div style="position:relative;">
+            <input type="text" id="f-dep-search" placeholder="Type to search pieces..." autocomplete="off" oninput="renderDepSuggestions()" onfocus="renderDepSuggestions()" onblur="setTimeout(hideDepSuggestions, 150)" />
+            <div id="f-dep-suggestions" class="dep-suggestions" style="display:none;"></div>
+          </div>
+          <div class="field-hint">Pieces from another trainer's file show up here too once you've loaded their file (see "Link to another trainer's pieces" below).</div>
+        </div>
+        <div class="field"><label for="f-depNotes">Dependency notes (optional)</label><input type="text" id="f-depNotes" placeholder="e.g., Module 3 quiz references scenarios from this ILT" /></div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="f-neededBy">Needed by (optional)</label>
+          <input type="date" id="f-neededBy" />
+          <div class="field-hint">Only if something outside your control sets a date — a system launch, a policy deadline, a class start. Leave blank otherwise.</div>
+        </div>
+        <div class="field"><label for="f-neededByReason">Why that date?</label><input type="text" id="f-neededByReason" placeholder="e.g., New billing system launches March 1" /></div>
+      </div>
+      <div class="field"><label for="f-trainerNotes">Notes for your designer</label><textarea id="f-trainerNotes" rows="2" placeholder="e.g., This session always runs long. Participants struggle with the scenario section."></textarea></div>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Your inventory <span id="countLabel" style="opacity:.6;font-weight:400;font-size:12px;margin-left:6px"></span></h2>
+      <button class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.35)" onclick="clearAll()">Clear all</button>
+    </div>
+    <div class="card-body">
+      <div id="statsRow"></div>
+      <div id="list"></div>
+    </div>
+  </div>
+
+  <!-- SEND -->
+  <div class="card">
+    <div class="card-header"><h2>Send to your designer</h2></div>
+    <div class="card-body">
+      <div id="checkResults"></div>
+      <div class="toolbar">
+        <button class="btn btn-navy" onclick="exportFile()">⬇ Download my file</button>
+        <span class="small-note">Email the downloaded .json file to your designer. You can download again any time you make changes — the designer can import updates without losing their own work.</span>
+      </div>
+      <div id="exportFeedback" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- RESTORE / LINK -->
+  <div class="card">
+    <div class="card-header"><h2>Open a saved file or link to another trainer's pieces</h2></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div>
+          <label for="restoreFile">Continue from a file I saved</label>
+          <input type="file" id="restoreFile" accept=".json,application/json" onchange="restoreFromFile(this)" style="padding:8px;background:white" />
+          <div class="field-hint">Use this to pick up where you left off on a different computer or browser. It replaces what's here now.</div>
+        </div>
+        <div>
+          <label for="refFile">Link to another trainer's pieces</label>
+          <input type="file" id="refFile" accept=".json,application/json" multiple onchange="loadReferenceFiles(this)" style="padding:8px;background:white" />
+          <div class="field-hint">Load a co-trainer's file so you can mark your pieces as depending on theirs. Their pieces are read-only here and aren't included in your file.</div>
+        </div>
+      </div>
+      <div id="refList" style="margin-top:12px"></div>
+      <div id="fileFeedback" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── FILE FORMAT (shared with the designer tool) ───────────────────────────
+// {
+//   format: 'id-trainer-inventory', version: 1, exportedAt: ISO, trainer: 'Name',
+//   program: { name, length, audience },
+//   deliverables: [{ id, name, type, duration (minutes), desc, location, condition, needsUpdate, dependsOn:[ids],
+//                    depNotes, trainerNotes, neededBy, neededByReason, editedAt: ISO, editedBy }],
+//   removedIds: [ids the trainer deleted, so the designer can drop them too]
+// }
+const FORMAT_NAME = 'id-trainer-inventory';
+const STORE_KEY = 'idt_trainer_inventory_v1';
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function nowISO() { return new Date().toISOString(); }
+function fmtDate(v) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+  return m ? `${m[2]}/${m[3]}/${m[1]}` : (v || '');
+}
+
+// ─── STATE + STORAGE ───────────────────────────────────────────────────────
+function defaultState() {
+  return { meta: { programName: '', trainerName: '', programLength: '', audience: '' }, deliverables: [], removedIds: [], references: [] };
+}
+let state = defaultState();
+let storageOK = true;
+let memoryBackup = null;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      return Object.assign(defaultState(), s, { meta: Object.assign(defaultState().meta, s.meta || {}) });
+    }
+  } catch (e) { storageOK = false; }
+  return defaultState();
+}
+function saveState() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    document.getElementById('saveState').textContent = 'Saved in this browser at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  } catch (e) {
+    storageOK = false;
+    memoryBackup = JSON.stringify(state);
+    document.getElementById('saveState').textContent = 'Not saving — download your file often';
+    showStorageWarning();
+  }
+}
+function showStorageWarning() {
+  document.getElementById('storageWarning').innerHTML = storageOK ? '' :
+    '<div class="banner red"><strong>This browser isn\'t saving your work.</strong> It may be in private mode, or storage is turned off. Your entries stay on screen while this tab is open, but they\'ll be lost if you close it. Download your file regularly.</div>';
+}
+
+// ─── PROGRAM INFO ──────────────────────────────────────────────────────────
+function syncMeta() {
+  state.meta.programName = document.getElementById('programName').value;
+  state.meta.trainerName = document.getElementById('trainerName').value;
+  state.meta.programLength = document.getElementById('programLength').value;
+  state.meta.audience = document.getElementById('audience').value;
+  saveState();
+}
+function loadMetaIntoForm() {
+  document.getElementById('programName').value = state.meta.programName || '';
+  document.getElementById('trainerName').value = state.meta.trainerName || '';
+  document.getElementById('programLength').value = state.meta.programLength || '';
+  document.getElementById('audience').value = state.meta.audience || '';
+}
+
+// ─── LOOKUPS ───────────────────────────────────────────────────────────────
+// Own pieces plus read-only pieces from other trainers' files.
+function allPieces() {
+  const mine = state.deliverables.map(d => ({ id: d.id, name: d.name, own: true, by: '' }));
+  const refs = (state.references || []).flatMap(r => (r.deliverables || []).map(d => ({ id: d.id, name: d.name, own: false, by: r.trainer || 'another trainer', dependsOn: d.dependsOn || [] })));
+  return mine.concat(refs);
+}
+function pieceById(id) { return allPieces().find(p => p.id === id); }
+// Pieces that depend on this one — from my own list and from loaded reference files.
+function dependentsOf(id) {
+  const mine = state.deliverables.filter(d => (d.dependsOn || []).includes(id)).map(d => ({ name: d.name, own: true }));
+  const refs = (state.references || []).flatMap(r => (r.deliverables || []).filter(d => (d.dependsOn || []).includes(id)).map(d => ({ name: d.name, own: false, by: r.trainer })));
+  return mine.concat(refs);
+}
+
+// ─── DEPENDS-ON PICKER ─────────────────────────────────────────────────────
+let editingId = null;
+let selectedDeps = [];
+
+function renderDepChips() {
+  const el = document.getElementById('f-dep-chips');
+  el.innerHTML = selectedDeps.map(id => {
+    const p = pieceById(id);
+    const label = p ? p.name + (p.own ? '' : ` (${p.by})`) : 'A piece that isn\'t loaded';
+    return `<span class="dep-chip ${p && !p.own ? 'ref' : ''}">${esc(label)}<button type="button" onclick="removeDep('${id}')" aria-label="Remove ${esc(label)}">×</button></span>`;
+  }).join('');
+}
+function renderDepSuggestions() {
+  const search = document.getElementById('f-dep-search');
+  const list = document.getElementById('f-dep-suggestions');
+  const term = search.value.trim().toLowerCase();
+  const matches = allPieces().filter(p => p.id !== editingId && !selectedDeps.includes(p.id) && (!term || p.name.toLowerCase().includes(term)));
+  list.innerHTML = matches.length
+    ? matches.map(p => `<div class="dep-suggestion-item" onmousedown="addDep('${p.id}')">${esc(p.name)}${p.own ? '' : ` <small>· ${esc(p.by)}</small>`}</div>`).join('')
+    : `<div class="dep-suggestion-item" style="color:var(--muted);cursor:default">${allPieces().length ? 'No matches' : 'No other pieces yet — add this one first, then come back to link dependencies.'}</div>`;
+  list.style.display = 'block';
+}
+function hideDepSuggestions() { document.getElementById('f-dep-suggestions').style.display = 'none'; }
+function addDep(id) {
+  if (!selectedDeps.includes(id)) selectedDeps.push(id);
+  document.getElementById('f-dep-search').value = '';
+  renderDepChips(); renderDepSuggestions();
+}
+function removeDep(id) { selectedDeps = selectedDeps.filter(x => x !== id); renderDepChips(); }
+
+// ─── ADD / EDIT ────────────────────────────────────────────────────────────
+function setInvalid(fieldId, on, msg) {
+  const f = document.getElementById(fieldId);
+  f.classList.toggle('invalid', on);
+  const old = f.querySelector('.field-error');
+  if (old) old.remove();
+  if (on) { const d = document.createElement('div'); d.className = 'field-error'; d.textContent = msg; f.appendChild(d); }
+}
+
+function saveDeliverable() {
+  const name = document.getElementById('f-name-input').value.trim();
+  const cond = (document.querySelector('input[name="cond"]:checked') || {}).value || '';
+  const needs = document.getElementById('f-needsUpdate').value;
+  setInvalid('f-name', !name, 'Give this piece a name.');
+  setInvalid('f-cond', !cond, 'Pick the current condition.');
+  setInvalid('f-needs', !needs, 'Pick how urgent this is — your designer relies on it.');
+  if (!name || !cond || !needs) return;
+
+  const raw = parseFloat(document.getElementById('f-duration').value) || 0;
+  const unit = document.getElementById('f-duration-unit').value;
+  const fields = {
+    name,
+    type: document.getElementById('f-type').value,
+    duration: Math.round(unit === 'hr' ? raw * 60 : raw), // always stored as minutes
+    desc: document.getElementById('f-desc').value.trim(),
+    location: document.getElementById('f-location').value.trim(),
+    condition: cond,
+    needsUpdate: needs,
+    dependsOn: selectedDeps.slice(),
+    depNotes: document.getElementById('f-depNotes').value.trim(),
+    trainerNotes: document.getElementById('f-trainerNotes').value.trim(),
+    neededBy: document.getElementById('f-neededBy').value,
+    neededByReason: document.getElementById('f-neededByReason').value.trim(),
+    editedAt: nowISO(),
+    editedBy: state.meta.trainerName || '',
+  };
+
+  if (editingId) {
+    // Edited in place: same id, so anything linked to this piece stays linked.
+    const existing = state.deliverables.find(d => d.id === editingId);
+    if (existing) Object.assign(existing, fields);
+  } else {
+    state.deliverables.push(Object.assign({ id: uid() }, fields));
+  }
+  saveState();
+  resetForm();
+  render();
+}
+
+function resetForm() {
+  editingId = null;
+  document.getElementById('formTitle').textContent = 'Add a content piece';
+  document.getElementById('submitBtn').textContent = '+ Add to inventory';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  ['f-name-input', 'f-duration', 'f-desc', 'f-location', 'f-depNotes', 'f-trainerNotes', 'f-neededBy', 'f-neededByReason'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-needsUpdate').value = '';
+  document.getElementById('f-duration-unit').value = 'min';
+  document.querySelectorAll('input[name="cond"]').forEach(r => { r.checked = false; });
+  ['f-name', 'f-cond', 'f-needs'].forEach(id => setInvalid(id, false));
+  selectedDeps = [];
+  renderDepChips();
+  document.getElementById('f-dep-search').value = '';
+}
+function cancelEdit() { resetForm(); }
+
+function editItem(id) {
+  const item = state.deliverables.find(d => d.id === id);
+  if (!item) return;
+  resetForm();
+  editingId = id;
+  document.getElementById('formTitle').textContent = 'Editing: ' + item.name;
+  document.getElementById('submitBtn').textContent = 'Save changes';
+  document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+  document.getElementById('f-name-input').value = item.name;
+  document.getElementById('f-type').value = item.type || '';
+  document.getElementById('f-duration').value = item.duration || '';
+  document.getElementById('f-duration-unit').value = 'min';
+  document.getElementById('f-desc').value = item.desc || '';
+  document.getElementById('f-location').value = item.location || '';
+  document.getElementById('f-needsUpdate').value = item.needsUpdate || '';
+  document.getElementById('f-depNotes').value = item.depNotes || '';
+  document.getElementById('f-trainerNotes').value = item.trainerNotes || '';
+  document.getElementById('f-neededBy').value = item.neededBy || '';
+  document.getElementById('f-neededByReason').value = item.neededByReason || '';
+  const r = document.querySelector(`input[name="cond"][value="${item.condition}"]`);
+  if (r) r.checked = true;
+  selectedDeps = (item.dependsOn || []).slice();
+  renderDepChips();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteItem(id) {
+  const item = state.deliverables.find(d => d.id === id);
+  if (!item) return;
+  const blockers = dependentsOf(id);
+  const extra = blockers.length ? `\n\n${blockers.map(b => b.name).join(', ')} ${blockers.length > 1 ? 'depend' : 'depends'} on this piece.` : '';
+  if (!confirm(`Remove "${item.name}"?${extra}`)) return;
+  state.deliverables = state.deliverables.filter(d => d.id !== id);
+  state.deliverables.forEach(d => { d.dependsOn = (d.dependsOn || []).filter(x => x !== id); });
+  // Remembered so the designer's copy drops it too when they import your next file.
+  if (!state.removedIds.includes(id)) state.removedIds.push(id);
+  if (editingId === id) resetForm();
+  saveState();
+  render();
+}
+
+function clearAll() {
+  if (!state.deliverables.length) return;
+  if (!confirm('Remove every piece from your inventory and start over? Your designer will be told these pieces were removed the next time you send a file.')) return;
+  state.deliverables.forEach(d => { if (!state.removedIds.includes(d.id)) state.removedIds.push(d.id); });
+  state.deliverables = [];
+  resetForm();
+  saveState();
+  render();
+}
+
+// ─── DISPLAY ───────────────────────────────────────────────────────────────
+const COND_BADGE = {
+  current: '<span class="badge badge-green">✓ Current</span>',
+  minor: '<span class="badge badge-blue">~ Minor updates</span>',
+  outdated: '<span class="badge badge-orange">⚠ Outdated</span>',
+  broken: '<span class="badge badge-red">✕ Broken</span>',
+  doesnotexist: '<span class="badge badge-navy">🆕 Doesn\'t exist yet</span>',
+};
+const NEEDS_BADGE = {
+  'yes-urgent': '<span class="badge badge-red">Urgent</span>',
+  'yes-soon': '<span class="badge badge-orange">Before next delivery</span>',
+  'yes-eventually': '<span class="badge badge-blue">Eventually</span>',
+  'no': '<span class="badge badge-green">Not needed right now</span>',
+};
+let openCards = new Set();
+function toggleCard(id) {
+  if (openCards.has(id)) openCards.delete(id); else openCards.add(id);
+  const body = document.getElementById('body_' + id);
+  const head = document.getElementById('head_' + id);
+  if (body) body.classList.toggle('open');
+  if (head) head.setAttribute('aria-expanded', openCards.has(id));
+}
+
+function render() {
+  const items = state.deliverables;
+  document.getElementById('countLabel').textContent = items.length ? `(${items.length})` : '';
+
+  const totalMins = items.reduce((s, i) => s + (i.duration || 0), 0);
+  document.getElementById('statsRow').innerHTML = items.length ? `
+    <div class="stats">
+      <div class="stat"><b>${items.length}</b>pieces</div>
+      <div class="stat"><b>${Math.round(totalMins / 60 * 10) / 10}h</b>total length</div>
+      <div class="stat"><b>${items.filter(i => i.needsUpdate === 'yes-urgent').length}</b>urgent</div>
+      <div class="stat"><b>${items.filter(i => i.condition === 'doesnotexist').length}</b>don't exist yet</div>
+    </div>` : '';
+
+  const list = document.getElementById('list');
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state">Nothing here yet. Add your first piece of content above.</div>';
+  } else {
+    list.innerHTML = '<div class="deliverable-list">' + items.map((item, i) => {
+      const deps = (item.dependsOn || []).map(pieceById);
+      const depNames = deps.map(p => p ? p.name + (p.own ? '' : ` (${p.by})`) : 'a piece that isn\'t loaded');
+      const blockers = dependentsOf(item.id);
+      const cls = (deps.length && blockers.length) ? 'dep-critical' : (deps.length || blockers.length) ? 'has-dep' : '';
+      const open = openCards.has(item.id);
+      return `
+      <div class="del-card ${cls}">
+        <button type="button" class="del-card-header" id="head_${item.id}" aria-expanded="${open}" onclick="toggleCard('${item.id}')">
+          <div class="del-num">${i + 1}</div>
+          <div class="del-title-display">${esc(item.name)}</div>
+          <div class="del-badges">
+            ${COND_BADGE[item.condition] || ''}
+            ${NEEDS_BADGE[item.needsUpdate] || ''}
+            ${item.duration ? `<span class="badge badge-muted">${item.duration}m</span>` : ''}
+            ${item.neededBy ? `<span class="badge badge-red">⏰ ${esc(fmtDate(item.neededBy))}</span>` : ''}
+          </div>
+          <span style="color:var(--muted);font-size:18px" aria-hidden="true">▾</span>
+        </button>
+        <div class="del-card-body ${open ? 'open' : ''}" id="body_${item.id}">
+          <div class="del-grid">
+            <div><label>Type</label><div style="font-size:13px">${esc(item.type) || '—'}</div></div>
+            <div><label>Length</label><div style="font-size:13px">${item.duration ? item.duration + ' minutes' : '—'}</div></div>
+            <div><label>Priority to address</label><div>${NEEDS_BADGE[item.needsUpdate] || '—'}</div></div>
+          </div>
+          <div class="del-grid-2">
+            <div><label>What it covers</label><div style="font-size:12px;color:var(--muted)">${esc(item.desc) || '—'}</div></div>
+            <div><label>Where it lives</label><div style="font-size:12px;color:var(--muted)">${esc(item.location) || '—'}</div></div>
+          </div>
+          ${item.neededBy ? `<div style="font-size:12px;margin-bottom:8px"><strong>Needed by:</strong> ${esc(fmtDate(item.neededBy))}${item.neededByReason ? ' — ' + esc(item.neededByReason) : ''}</div>` : ''}
+          ${(depNames.length || blockers.length) ? `<div class="dep-flag">
+            ${depNames.length ? `<strong>Depends on:</strong> ${depNames.map(esc).join(', ')}<br>` : ''}
+            ${blockers.length ? `<strong>Blocks:</strong> ${blockers.map(b => esc(b.name) + (b.own ? '' : ` (${esc(b.by)})`)).join(', ')}<br>` : ''}
+            ${item.depNotes ? esc(item.depNotes) : ''}
+          </div>` : ''}
+          ${item.trainerNotes ? `<div style="background:var(--orange-light);border-radius:var(--radius);padding:8px 12px;margin-top:8px;font-size:12px;color:#7a3e00"><strong>Your note:</strong> ${esc(item.trainerNotes)}</div>` : ''}
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')">Edit</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem('${item.id}')">Remove</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+  renderRefList();
+  renderChecks();
+}
+
+// A friendly pre-flight before sending: warnings only, never a block.
+function renderChecks() {
+  const items = state.deliverables;
+  const el = document.getElementById('checkResults');
+  if (!items.length) { el.innerHTML = '<div class="banner blue">Add at least one piece before you send your file.</div>'; return; }
+  const notes = [];
+  if (!state.meta.trainerName.trim()) notes.push('Add your name at the top so your designer knows whose file this is.');
+  if (!state.meta.programName.trim()) notes.push('Add the program name at the top.');
+  const noType = items.filter(i => !i.type).length;
+  if (noType) notes.push(`${noType} piece${noType > 1 ? 's have' : ' has'} no type.`);
+  const noLen = items.filter(i => !i.duration && i.condition !== 'doesnotexist').length;
+  if (noLen) notes.push(`${noLen} existing piece${noLen > 1 ? 's have' : ' has'} no length. A rough number is fine.`);
+  const dangling = items.filter(i => (i.dependsOn || []).some(id => !pieceById(id))).length;
+  if (dangling) notes.push(`${dangling} piece${dangling > 1 ? 's depend' : ' depends'} on something that isn't loaded here — load that trainer's file, or remove the link.`);
+  const cycles = findCycles();
+  if (cycles.length) notes.push('These pieces depend on each other in a loop: ' + cycles.map(c => c.map(id => (pieceById(id) || {}).name || '?').join(' → ')).join('; ') + '.');
+  el.innerHTML = notes.length
+    ? `<div class="banner"><strong>Worth a look before you send:</strong><ul style="margin:6px 0 0 18px">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>You can still download your file — these are reminders, not blocks.</div>`
+    : '<div class="banner green">Everything looks complete. Download your file when you\'re ready.</div>';
+}
+
+function findCycles() {
+  const cycles = [], seen = new Set();
+  const byId = Object.fromEntries(state.deliverables.map(d => [d.id, d]));
+  function walk(start, cur, path) {
+    if (path.includes(cur)) { if (cur === start && path.length > 1) cycles.push([...path]); return; }
+    const item = byId[cur];
+    if (!item) return;
+    (item.dependsOn || []).forEach(n => walk(start, n, [...path, cur]));
+  }
+  state.deliverables.forEach(d => walk(d.id, d.id, []));
+  return cycles.filter(c => { const k = [...c].sort().join(','); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+// ─── EXPORT ────────────────────────────────────────────────────────────────
+function buildExport() {
+  return {
+    format: FORMAT_NAME, version: 1, exportedAt: nowISO(),
+    trainer: state.meta.trainerName || '',
+    program: { name: state.meta.programName || '', length: state.meta.programLength || '', audience: state.meta.audience || '' },
+    deliverables: state.deliverables,
+    removedIds: state.removedIds,
+  };
+}
+function exportFile() {
+  const fb = document.getElementById('exportFeedback');
+  if (!state.deliverables.length) { fb.innerHTML = '<div class="banner red">There\'s nothing to download yet — add a piece first.</div>'; return; }
+  const safe = s => (s || '').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  const name = `Inventory_${safe(state.meta.programName) || 'Program'}_${safe(state.meta.trainerName) || 'Trainer'}_${nowISO().slice(0, 10)}.json`;
+  const blob = new Blob([JSON.stringify(buildExport(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.style.display = 'none';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  fb.innerHTML = `<div class="banner green">Downloaded <strong>${esc(name)}</strong>. Email it to your designer.</div>`;
+}
+
+// ─── RESTORE / REFERENCE FILES ─────────────────────────────────────────────
+function readFile(f) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(new Error('Could not read ' + f.name));
+    r.readAsText(f);
+  });
+}
+async function parseInventoryFile(f) {
+  let data;
+  try { data = JSON.parse(await readFile(f)); } catch (e) { throw new Error(`${f.name} isn't a readable inventory file.`); }
+  if (!data || data.format !== FORMAT_NAME || !Array.isArray(data.deliverables)) throw new Error(`${f.name} isn't an inventory file from this tool.`);
+  return data;
+}
+function fileFeedback(type, msg) { document.getElementById('fileFeedback').innerHTML = `<div class="banner ${type}">${esc(msg)}</div>`; }
+
+async function restoreFromFile(input) {
+  const f = input.files[0];
+  if (!f) return;
+  try {
+    const data = await parseInventoryFile(f);
+    if (state.deliverables.length && !confirm('This replaces everything currently in your inventory with the contents of the file. Continue?')) { input.value = ''; return; }
+    state.meta.programName = (data.program && data.program.name) || '';
+    state.meta.programLength = (data.program && data.program.length) || '';
+    state.meta.audience = (data.program && data.program.audience) || '';
+    state.meta.trainerName = data.trainer || state.meta.trainerName;
+    state.deliverables = data.deliverables;
+    state.removedIds = data.removedIds || [];
+    saveState();
+    loadMetaIntoForm();
+    resetForm();
+    render();
+    fileFeedback('green', `Restored ${data.deliverables.length} piece${data.deliverables.length === 1 ? '' : 's'} from ${f.name}.`);
+  } catch (e) { fileFeedback('red', e.message); }
+  input.value = '';
+}
+
+async function loadReferenceFiles(input) {
+  const files = [...input.files];
+  const msgs = [];
+  for (const f of files) {
+    try {
+      const data = await parseInventoryFile(f);
+      const trainer = data.trainer || 'another trainer';
+      if (trainer === state.meta.trainerName && state.meta.trainerName) { msgs.push(`${f.name} looks like your own file — use "Continue from a file I saved" for that.`); continue; }
+      state.references = (state.references || []).filter(r => r.trainer !== trainer);
+      state.references.push({ trainer, programName: (data.program && data.program.name) || '', loadedAt: nowISO(), deliverables: data.deliverables.map(d => ({ id: d.id, name: d.name, dependsOn: d.dependsOn || [] })) });
+    } catch (e) { msgs.push(e.message); }
+  }
+  saveState();
+  render();
+  if (msgs.length) fileFeedback('red', msgs.join(' '));
+  else if (files.length) fileFeedback('green', 'Loaded. Their pieces now show up in the "Depends on" list.');
+  input.value = '';
+}
+function removeReference(idx) {
+  state.references = (state.references || []).filter((r, i) => i !== idx);
+  saveState();
+  render();
+}
+function renderRefList() {
+  const el = document.getElementById('refList');
+  const refs = state.references || [];
+  el.innerHTML = refs.length ? '<label>Loaded from other trainers</label>' + refs.map((r, idx) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;font-size:13px">
+      <span><strong>${esc(r.trainer)}</strong> · ${r.deliverables.length} piece${r.deliverables.length === 1 ? '' : 's'}${r.programName ? ' · ' + esc(r.programName) : ''}</span>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="removeReference(${idx})">Remove</button>
+    </div>`).join('') : '';
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+state = loadState();
+loadMetaIntoForm();
+renderDepChips();
+showStorageWarning();
+render();
+</script>
+</body>
+</html>
