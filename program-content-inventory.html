@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Program Content Inventory</title>
+<style>
+  :root {
+    --navy: #263746; --green: #77BC1F; --blue: #2172B7; --orange: #FF8300; --red: #d63b3b;
+    --navy-xlight: #eef1f4; --green-light: #f0f8e6; --orange-light: #fff4e6; --red-light: #fdf0f0; --blue-light: #eef5fd;
+    --text: #1a2730; --muted: #6b7f8c; --border: #d0dbe3; --white: #ffffff;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Roboto','Segoe UI',system-ui,sans-serif; background: var(--navy-xlight); color: var(--text); min-height: 100vh; line-height: 1.45; }
+
+  /* HEADER */
+  header { background: var(--navy); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 30; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 34px; height: 34px; background: var(--orange); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; color: white; }
+  .brand-title { color: white; font-size: 15px; font-weight: 600; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .save-state { color: rgba(255,255,255,.6); font-size: 12px; }
+
+  .hero { background: var(--navy); padding: 18px 32px 28px; border-bottom: 4px solid var(--orange); }
+  .hero h1 { color: white; font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  .hero p { color: rgba(255,255,255,.7); font-size: 14px; max-width: 720px; }
+  .steps { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; max-width: 900px; }
+  .step { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.08); border-radius: var(--radius); padding: 10px 14px; flex: 1; min-width: 200px; color: rgba(255,255,255,.85); font-size: 13px; }
+  .step b { color: var(--orange); font-size: 18px; font-weight: 900; }
+
+  .main { max-width: 960px; margin: 0 auto; padding: 24px 24px 64px; }
+
+  /* CARDS */
+  .card { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 20px; }
+  .card-head { padding: 16px 20px 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .card-head h2 { font-size: 16px; font-weight: 700; color: var(--navy); }
+  .card-head .sub { font-size: 12px; color: var(--muted); }
+  .card-body { padding: 16px 20px 20px; }
+
+  /* FORM */
+  label, .label { display: block; font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 5px; letter-spacing: .5px; text-transform: uppercase; }
+  .opt { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); font-size: 11px; }
+  .req { color: var(--red); margin-left: 2px; }
+  input[type="text"], input[type="number"], input[type="date"], input[type="search"], select, textarea { width: 100%; padding: 9px 11px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: inherit; color: var(--text); background: var(--white); transition: border-color .15s; }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid transparent; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(33,114,183,.18); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-name { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+  .field { margin-bottom: 14px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .field.invalid input[type="text"], .field.invalid .chip span { border-color: var(--red); }
+  .field-error { font-size: 12px; color: var(--red); margin-top: 4px; font-weight: 600; }
+
+  /* CHIP SELECTORS (condition + priority) */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { position: relative; margin: 0; text-transform: none; letter-spacing: 0; font-size: inherit; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip span { display: inline-block; padding: 7px 12px; border-radius: 6px; border: 2px solid var(--border); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); background: white; transition: all .15s; }
+  .chip span:hover { border-color: var(--navy); color: var(--navy); }
+  .chip input:focus-visible + span { outline: 3px solid rgba(33,114,183,.4); outline-offset: 2px; }
+  .chip input:checked + span { color: white; border-color: transparent; }
+  .chip.c-green input:checked + span { background: var(--green); }
+  .chip.c-blue input:checked + span { background: var(--blue); }
+  .chip.c-orange input:checked + span { background: var(--orange); }
+  .chip.c-red input:checked + span { background: var(--red); }
+  .chip.c-navy input:checked + span { background: var(--navy); }
+
+  /* MORE DETAIL */
+  .pcards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .pcard { position: relative; margin: 0; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .pcard input { position: absolute; opacity: 0; pointer-events: none; }
+  .pcard span { display: block; height: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 12px; color: var(--muted); background: white; transition: all .15s; }
+  .pcard span b { display: block; font-size: 14px; color: var(--navy); margin-bottom: 2px; }
+  .pcard span:hover { border-color: var(--navy); }
+  .pcard input:focus-visible + span { outline: 3px solid rgba(33,114,183,.4); outline-offset: 2px; }
+  .pcard.p-red input:checked + span { border-color: var(--red); background: var(--red-light); color: var(--text); }
+  .pcard.p-orange input:checked + span { border-color: var(--orange); background: var(--orange-light); color: var(--text); }
+  .pcard.p-blue input:checked + span { border-color: var(--blue); background: var(--blue-light); color: var(--text); }
+  .pcard.p-green input:checked + span { border-color: var(--green); background: var(--green-light); color: var(--text); }
+  .field.invalid .pcard span { border-color: var(--red); }
+  @media (max-width: 720px) { .pcards { grid-template-columns: 1fr 1fr; } }
+  .sec { padding: 18px 0; border-top: 1px solid var(--border); }
+  .sec:first-child { padding-top: 4px; border-top: none; }
+  .sec-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+  .sec-num { width: 26px; height: 26px; border-radius: 50%; background: var(--navy); color: white; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sec-head h3 { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .sec-head p { font-size: 12px; color: var(--muted); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .badge.gap { background: white; color: var(--muted); border: 1px dashed var(--border); font-weight: 600; }
+  .form-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 4px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .form-actions .left { margin-right: auto; }
+
+  /* BUTTONS */
+  .btn { padding: 9px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; white-space: nowrap; }
+  .btn:focus-visible { outline: 3px solid rgba(33,114,183,.4); outline-offset: 2px; }
+  .btn-green { background: var(--green); color: white; }
+  .btn-green:hover { background: #68a619; }
+  .btn-orange { background: var(--orange); color: white; }
+  .btn-orange:hover { background: #e07500; }
+  .btn-navy { background: var(--navy); color: white; }
+  .btn-navy:hover { background: #344d5e; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--navy); color: var(--navy); background: var(--navy-xlight); }
+  .btn-danger { background: var(--red-light); color: var(--red); border: 1px solid #f5a0a0; }
+  .btn-danger:hover { background: var(--red); color: white; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-link { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; text-decoration: underline; font-family: inherit; }
+  .btn-link:hover { color: var(--red); }
+
+  /* DEPENDS-ON PICKER */
+  .dep-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-light); color: #0d4a80; border: 1px solid #a8cef0; border-radius: 14px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
+  .dep-chip.ref { background: var(--navy-xlight); color: var(--navy); border-color: var(--border); }
+  .dep-chip button { background: none; border: none; color: inherit; cursor: pointer; font-weight: 900; padding: 0; font-size: 15px; line-height: 1; }
+  .dep-suggestions { position: absolute; z-index: 20; background: white; border: 1.5px solid var(--border); border-radius: 8px; margin-top: 4px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,.12); width: 100%; }
+  .dep-suggestion-item { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  .dep-suggestion-item:hover { background: var(--blue-light); }
+  .dep-suggestion-item small { color: var(--muted); }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+  .b-green  { background: var(--green-light); color: #3a6600; border: 1px solid #b7df7a; }
+  .b-blue   { background: var(--blue-light); color: #0d4a80; border: 1px solid #a8cef0; }
+  .b-orange { background: var(--orange-light); color: #7a3e00; border: 1px solid #ffd199; }
+  .b-red    { background: var(--red-light); color: var(--red); border: 1px solid #f5a0a0; }
+  .b-muted  { background: var(--navy-xlight); color: var(--muted); border: 1px solid var(--border); }
+  .b-navy   { background: var(--navy); color: white; border: 1px solid var(--navy); }
+
+  /* INVENTORY LIST */
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .stat { background: var(--navy-xlight); border-radius: var(--radius); padding: 8px 14px; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .stat b { display: block; font-size: 20px; color: var(--navy); }
+  .list-tools { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .list-tools input { flex: 1; min-width: 200px; }
+  .list-tools select { width: auto; min-width: 180px; }
+  .item-list { display: flex; flex-direction: column; gap: 8px; }
+  .item { border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .item:hover { border-color: var(--blue); }
+  .item.linked { border-left: 4px solid var(--orange); }
+  .item-head { background: white; padding: 11px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; width: 100%; border: none; text-align: left; font-family: inherit; }
+  .item-num { width: 24px; height: 24px; background: var(--navy-xlight); color: var(--navy); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+  .item-name { flex: 1; font-size: 14px; font-weight: 600; color: var(--navy); }
+  .item-name small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+  .item-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .caret { color: var(--muted); font-size: 16px; transition: transform .15s; }
+  .item-head[aria-expanded="true"] .caret { transform: rotate(180deg); }
+  .item-body { padding: 14px; background: var(--navy-xlight); display: none; border-top: 1px solid var(--border); font-size: 13px; }
+  .item-body.open { display: block; }
+  .kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 10px; }
+  .kv div span { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+  .note { background: white; border-radius: var(--radius); padding: 8px 12px; margin-top: 8px; font-size: 13px; border: 1px solid var(--border); }
+  .note.warn { background: var(--orange-light); border-color: #ffd199; color: #7a3e00; }
+  .item-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .empty { text-align: center; padding: 36px 20px; color: var(--muted); font-size: 14px; }
+
+  /* BANNERS */
+  .banner { border-radius: var(--radius); padding: 12px 16px; font-size: 13px; margin-bottom: 14px; background: var(--orange-light); border: 1px solid #ffd199; color: #7a3e00; }
+  .banner.blue { background: var(--blue-light); border-color: #a8cef0; color: #0d4a80; }
+  .banner.green { background: var(--green-light); border-color: #b8de8a; color: #3a6600; }
+  .banner.red { background: var(--red-light); border-color: #f5a0a0; color: var(--red); }
+  .banner ul { margin: 6px 0 0 18px; }
+
+  .share-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .share-row .hint { margin: 0; flex: 1; min-width: 220px; }
+  .files { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); }
+  .file-box input[type="file"] { width: 100%; padding: 8px; border: 1.5px dashed var(--border); border-radius: var(--radius); background: white; font-size: 13px; }
+  .ref-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); margin-top: 6px; font-size: 13px; }
+
+  @media (max-width: 720px) {
+    .grid-2, .grid-name, .files, .kv { grid-template-columns: 1fr; }
+    header, .hero { padding-left: 16px; padding-right: 16px; }
+    .main { padding: 16px 16px 48px; }
+    .save-state { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">ID</div>
+    <div class="brand-title">Program Content Inventory</div>
+  </div>
+  <div class="header-right">
+    <div class="save-state" id="saveState" role="status" aria-live="polite">Not saved yet</div>
+    <button class="btn btn-orange btn-sm" onclick="exportFile(); document.getElementById('share').scrollIntoView({behavior:'smooth'})">⬇ Download file</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Program Content Inventory</h1>
+  <p>One place for everything in this program: what exists today and anything that still needs to be created. The design team uses it to group the work and estimate time, so fill in as much as you can. Best guesses are better than blanks.</p>
+  <div class="steps">
+    <div class="step"><b>1</b>Name the program</div>
+    <div class="step"><b>2</b>Add every piece of content, with as much detail as you know</div>
+    <div class="step"><b>3</b>Download your file and send it to the design team</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div id="storageWarning"></div>
+
+  <!-- PROGRAM -->
+  <section class="card">
+    <div class="card-head"><h2>Program</h2><span class="sub">Saves automatically in this browser</span></div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="field"><label for="programName">Program name</label><input type="text" id="programName" placeholder="e.g., Meters | Entry-Level" oninput="syncMeta()" /></div>
+        <div class="field"><label for="trainerName">Your name</label><input type="text" id="trainerName" placeholder="Who's filling this out" oninput="syncMeta()" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field" style="margin-bottom:0"><label for="programLength">Program length <span class="opt">(optional)</span></label><input type="text" id="programLength" placeholder="e.g., 3 weeks" oninput="syncMeta()" /></div>
+        <div class="field" style="margin-bottom:0"><label for="audience">Who it's for <span class="opt">(optional)</span></label><input type="text" id="audience" placeholder="e.g., New hire field technicians" oninput="syncMeta()" /></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADD / EDIT -->
+  <section class="card" id="formCard">
+    <div class="card-head"><h2 id="formTitle">Add content</h2><span class="sub">The more you fill in, the better the design team can plan</span></div>
+    <div class="card-body">
+      <div class="sec">
+        <div class="sec-head"><span class="sec-num">1</span><div><h3>The basics</h3><p>What it is and how urgent it is.</p></div></div>
+        <div class="grid-name">
+          <div class="field" id="f-name"><label for="f-name-input">Content name<span class="req">*</span></label><input type="text" id="f-name-input" placeholder="e.g., Meter Reading ILT, Day 1" /></div>
+          <div class="field">
+            <label for="f-type">Type</label>
+            <select id="f-type">
+              <option value="">Select type</option>
+              <option>ILT Session (live, in-person or virtual)</option>
+              <option>eLearning (self-paced online course)</option>
+              <option>Job Aid / Quick Reference Guide</option>
+              <option>Video</option>
+              <option>Assessment / Quiz</option>
+              <option>Facilitator Guide</option>
+              <option>Participant Workbook</option>
+              <option>SOP / Process Document</option>
+              <option>OJT / On-the-Job Practice</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" id="f-cond">
+          <div class="label" id="f-cond-label">Where is it today?<span class="req">*</span></div>
+          <div class="chips" role="radiogroup" aria-labelledby="f-cond-label">
+            <label class="chip c-green"><input type="radio" name="cond" value="current" onchange="updateLengthLabel()" /><span>✓ Current &amp; accurate</span></label>
+            <label class="chip c-blue"><input type="radio" name="cond" value="minor" onchange="updateLengthLabel()" /><span>Minor updates needed</span></label>
+            <label class="chip c-orange"><input type="radio" name="cond" value="outdated" onchange="updateLengthLabel()" /><span>⚠ Outdated</span></label>
+            <label class="chip c-red"><input type="radio" name="cond" value="broken" onchange="updateLengthLabel()" /><span>✕ Broken / unusable</span></label>
+            <label class="chip c-navy"><input type="radio" name="cond" value="doesnotexist" onchange="updateLengthLabel()" /><span>🆕 Needs to be created</span></label>
+          </div>
+        </div>
+        <div class="field" id="f-needs" style="margin-bottom:0">
+          <div class="label" id="f-needs-label">What happens if this waits?<span class="req">*</span></div>
+          <div class="pcards" role="radiogroup" aria-labelledby="f-needs-label">
+            <label class="pcard p-red"><input type="radio" name="needs" value="yes-urgent" /><span><b>Urgent</b>Learners are missing something or getting it wrong right now</span></label>
+            <label class="pcard p-orange"><input type="radio" name="needs" value="yes-soon" /><span><b>Soon</b>It's hurting the training, but people are working around it</span></label>
+            <label class="pcard p-blue"><input type="radio" name="needs" value="yes-eventually" /><span><b>When there's time</b>It would make things better, but it works as is</span></label>
+            <label class="pcard p-green"><input type="radio" name="needs" value="no" /><span><b>Leave it</b>Nothing needs to change</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head"><span class="sec-num">2</span><div><h3>Size and scope</h3><p>This is how the design team estimates time. Best guesses beat blanks.</p></div></div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="f-duration" id="f-duration-label">Length</label>
+            <div style="display:flex;gap:8px;">
+              <input type="number" id="f-duration" min="0" step="0.5" placeholder="e.g., 15" style="flex:1" />
+              <select id="f-duration-unit" style="width:110px" aria-label="Unit">
+                <option value="min" selected>Minutes</option>
+                <option value="hr">Hours</option>
+              </select>
+            </div>
+            <div class="hint" id="f-duration-hint">How long it takes a learner to go through it, not counting breaks.</div>
+          </div>
+          <div class="field"><label for="f-location">Where it lives</label><input type="text" id="f-location" placeholder="LMS path, folder, or link" /><div class="hint">So the designer can open it. Skip if it doesn't exist yet.</div></div>
+        </div>
+        <div class="field" style="margin-bottom:0"><label for="f-desc">What it covers</label><textarea id="f-desc" rows="2" placeholder="What this teaches or does, and the main topics in it"></textarea></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head"><span class="sec-num">3</span><div><h3>How it fits with other work</h3><p>Helps the design team group related pieces and decide what gets built first.</p></div></div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="f-dep-search">Has to come after</label>
+            <div id="f-dep-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            <div style="position:relative;margin-top:6px">
+              <input type="text" id="f-dep-search" placeholder="Search other pieces..." autocomplete="off" oninput="renderDepSuggestions()" onfocus="renderDepSuggestions()" onblur="setTimeout(hideDepSuggestions, 150)" />
+              <div id="f-dep-suggestions" class="dep-suggestions" style="display:none;"></div>
+            </div>
+            <div class="hint">Pieces that need to be finished, or changed, before this one. Leave blank if it stands on its own.</div>
+          </div>
+          <div class="field"><label for="f-depNotes">Why they're connected</label><input type="text" id="f-depNotes" placeholder="e.g., Quiz uses scenarios from this ILT" /></div>
+        </div>
+        <div class="grid-2">
+          <div class="field" style="margin-bottom:0">
+            <label for="f-neededBy">Hard deadline <span class="opt">(only if there is one)</span></label>
+            <input type="date" id="f-neededBy" />
+            <div class="hint">A date set by something outside your control: a system launch, a policy change, a class start.</div>
+          </div>
+          <div class="field" style="margin-bottom:0"><label for="f-neededByReason">What's driving that date</label><input type="text" id="f-neededByReason" placeholder="e.g., New billing system launches March 1" /></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head"><span class="sec-num">4</span><div><h3>Anything else</h3><p>What's not working, what people struggle with, what you'd change.</p></div></div>
+        <div class="field" style="margin-bottom:0"><label for="f-trainerNotes" class="sr-only">Notes for the design team</label><textarea id="f-trainerNotes" rows="3" placeholder="e.g., This session always runs long. People struggle with the scenario section. Ops wants this split into two shorter pieces."></textarea></div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-ghost" id="cancelEditBtn" onclick="cancelEdit()" style="display:none">Cancel</button>
+        <button class="btn btn-green" id="submitBtn" onclick="saveDeliverable()">+ Add to inventory</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- INVENTORY -->
+  <section class="card">
+    <div class="card-head"><h2>Inventory <span id="countLabel" style="color:var(--muted);font-weight:400;font-size:14px"></span></h2></div>
+    <div class="card-body">
+      <div id="statsRow"></div>
+      <div id="listTools"></div>
+      <div id="list"></div>
+      <div id="clearRow" style="text-align:right;margin-top:12px"></div>
+    </div>
+  </section>
+
+  <!-- SHARE -->
+  <section class="card" id="share">
+    <div class="card-head"><h2>Send to the design team</h2></div>
+    <div class="card-body">
+      <div id="checkResults"></div>
+      <div class="share-row">
+        <button class="btn btn-orange" onclick="exportFile()">⬇ Download my file</button>
+        <p class="hint">Email or Teams the downloaded file to your designer. Made changes later? Download again and send the new one. Nothing on their side gets lost.</p>
+      </div>
+      <div id="exportFeedback" style="margin-top:12px"></div>
+
+      <div class="files">
+        <div class="file-box">
+          <label for="restoreFile">Pick up where you left off</label>
+          <input type="file" id="restoreFile" accept=".json,application/json" onchange="restoreFromFile(this)" />
+          <div class="hint">Open a file you downloaded earlier, on any computer. It replaces what's on this page.</div>
+        </div>
+        <div class="file-box">
+          <label for="refFile">Working with a teammate?</label>
+          <input type="file" id="refFile" accept=".json,application/json" multiple onchange="loadReferenceFiles(this)" />
+          <div class="hint">Load their file so you can link your pieces to theirs. Their pieces stay theirs and aren't added to your file.</div>
+        </div>
+      </div>
+      <div id="refList"></div>
+      <div id="fileFeedback" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ─── FILE FORMAT (shared with the designer toolkit; do not rename keys) ─────
+// { format:'id-trainer-inventory', version:1, exportedAt, trainer, program:{name,length,audience},
+//   deliverables:[{ id, name, type, duration (minutes), desc, location, condition, needsUpdate, dependsOn:[ids],
+//                   depNotes, trainerNotes, neededBy, neededByReason, editedAt, editedBy }],
+//   removedIds:[ids deleted here, so the designer's copy drops them too] }
+const FORMAT_NAME = 'id-trainer-inventory';
+const STORE_KEY = 'idt_trainer_inventory_v1';
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function nowISO() { return new Date().toISOString(); }
+function fmtDate(v) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? `${m[2]}/${m[3]}/${m[1]}` : (v || ''); }
+function fmtLen(min) { if (!min) return ''; return min >= 60 ? (Math.round(min / 6) / 10) + ' hr' : min + ' min'; }
+
+// ─── STATE + STORAGE ───────────────────────────────────────────────────────
+function defaultState() { return { meta: { programName: '', trainerName: '', programLength: '', audience: '' }, deliverables: [], removedIds: [], references: [] }; }
+let state = defaultState();
+let storageOK = true;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) { const s = JSON.parse(raw); return Object.assign(defaultState(), s, { meta: Object.assign(defaultState().meta, s.meta || {}) }); }
+  } catch (e) { storageOK = false; }
+  return defaultState();
+}
+function saveState() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    document.getElementById('saveState').textContent = 'Saved ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  } catch (e) {
+    storageOK = false;
+    document.getElementById('saveState').textContent = 'Not saving, download often';
+    showStorageWarning();
+  }
+}
+function showStorageWarning() {
+  document.getElementById('storageWarning').innerHTML = storageOK ? '' :
+    '<div class="banner red"><strong>This browser isn\'t saving your work.</strong> It may be in private mode. Your entries stay while this tab is open, but download your file before closing it.</div>';
+}
+
+// ─── PROGRAM ───────────────────────────────────────────────────────────────
+function syncMeta() {
+  ['programName', 'trainerName', 'programLength', 'audience'].forEach(k => { state.meta[k] = document.getElementById(k).value; });
+  saveState();
+  renderChecks();
+}
+function loadMetaIntoForm() {
+  ['programName', 'trainerName', 'programLength', 'audience'].forEach(k => { document.getElementById(k).value = state.meta[k] || ''; });
+}
+
+// ─── LOOKUPS (own pieces + read-only teammate pieces) ──────────────────────
+function allPieces() {
+  const mine = state.deliverables.map(d => ({ id: d.id, name: d.name, own: true, by: '' }));
+  const refs = (state.references || []).flatMap(r => (r.deliverables || []).map(d => ({ id: d.id, name: d.name, own: false, by: r.trainer || 'a teammate' })));
+  return mine.concat(refs);
+}
+function pieceById(id) { return allPieces().find(p => p.id === id); }
+function dependentsOf(id) {
+  const mine = state.deliverables.filter(d => (d.dependsOn || []).includes(id)).map(d => ({ name: d.name, own: true }));
+  const refs = (state.references || []).flatMap(r => (r.deliverables || []).filter(d => (d.dependsOn || []).includes(id)).map(d => ({ name: d.name, own: false, by: r.trainer })));
+  return mine.concat(refs);
+}
+
+// ─── "HAS TO COME AFTER" PICKER ────────────────────────────────────────────
+let editingId = null;
+let selectedDeps = [];
+
+function renderDepChips() {
+  document.getElementById('f-dep-chips').innerHTML = selectedDeps.map(id => {
+    const p = pieceById(id);
+    const label = p ? p.name + (p.own ? '' : ` (${p.by})`) : 'A piece that isn\'t loaded';
+    return `<span class="dep-chip ${p && !p.own ? 'ref' : ''}">${esc(label)}<button type="button" onclick="removeDep('${id}')" aria-label="Remove ${esc(label)}">×</button></span>`;
+  }).join('');
+}
+function renderDepSuggestions() {
+  const term = document.getElementById('f-dep-search').value.trim().toLowerCase();
+  const list = document.getElementById('f-dep-suggestions');
+  const matches = allPieces().filter(p => p.id !== editingId && !selectedDeps.includes(p.id) && (!term || p.name.toLowerCase().includes(term)));
+  list.innerHTML = matches.length
+    ? matches.map(p => `<div class="dep-suggestion-item" onmousedown="addDep('${p.id}')">${esc(p.name)}${p.own ? '' : ` <small>· ${esc(p.by)}</small>`}</div>`).join('')
+    : `<div class="dep-suggestion-item" style="color:var(--muted);cursor:default">${allPieces().length ? 'No matches' : 'Nothing else added yet. Add this one, then come back to link it.'}</div>`;
+  list.style.display = 'block';
+}
+function hideDepSuggestions() { document.getElementById('f-dep-suggestions').style.display = 'none'; }
+function addDep(id) { if (!selectedDeps.includes(id)) selectedDeps.push(id); document.getElementById('f-dep-search').value = ''; renderDepChips(); renderDepSuggestions(); }
+function removeDep(id) { selectedDeps = selectedDeps.filter(x => x !== id); renderDepChips(); }
+
+// ─── FORM ──────────────────────────────────────────────────────────────────
+function updateLengthLabel() {
+  if (radioVal('cond') === 'current' && !radioVal('needs')) { const l = document.querySelector('input[name="needs"][value="no"]'); if (l) l.checked = true; }
+  const isNew = radioVal('cond') === 'doesnotexist';
+  document.getElementById('f-duration-label').textContent = isNew ? 'Expected length' : 'Length';
+  document.getElementById('f-duration-hint').textContent = isNew
+    ? 'Your best guess at how long it should take a learner. A rough number is fine.'
+    : 'How long it takes a learner to go through it, not counting breaks.';
+}
+// What the design team still needs to estimate this piece well.
+function missingDetails(item) {
+  const gaps = [];
+  if (!item.type) gaps.push('type');
+  if (!item.duration) gaps.push('length');
+  if (!(item.desc || '').trim()) gaps.push('what it covers');
+  if (item.condition !== 'doesnotexist' && !(item.location || '').trim()) gaps.push('where it lives');
+  return gaps;
+}
+function setInvalid(fieldId, on, msg) {
+  const f = document.getElementById(fieldId);
+  f.classList.toggle('invalid', on);
+  const old = f.querySelector('.field-error');
+  if (old) old.remove();
+  if (on) { const d = document.createElement('div'); d.className = 'field-error'; d.textContent = msg; f.appendChild(d); }
+}
+function radioVal(name) { return (document.querySelector(`input[name="${name}"]:checked`) || {}).value || ''; }
+
+function saveDeliverable() {
+  const name = document.getElementById('f-name-input').value.trim();
+  const cond = radioVal('cond');
+  const needs = radioVal('needs');
+  setInvalid('f-name', !name, 'Give this piece a name.');
+  setInvalid('f-cond', !cond, 'Pick where it is today.');
+  setInvalid('f-needs', !needs, 'Pick what happens if this waits.');
+  if (!name || !cond || !needs) return;
+
+  const raw = parseFloat(document.getElementById('f-duration').value) || 0;
+  const unit = document.getElementById('f-duration-unit').value;
+  const fields = {
+    name,
+    type: document.getElementById('f-type').value,
+    duration: Math.round(unit === 'hr' ? raw * 60 : raw),
+    desc: document.getElementById('f-desc').value.trim(),
+    location: document.getElementById('f-location').value.trim(),
+    condition: cond,
+    needsUpdate: needs,
+    dependsOn: selectedDeps.slice(),
+    depNotes: document.getElementById('f-depNotes').value.trim(),
+    trainerNotes: document.getElementById('f-trainerNotes').value.trim(),
+    neededBy: document.getElementById('f-neededBy').value,
+    neededByReason: document.getElementById('f-neededByReason').value.trim(),
+    editedAt: nowISO(),
+    editedBy: state.meta.trainerName || '',
+  };
+  const wasEditing = editingId;
+  if (editingId) {
+    const existing = state.deliverables.find(d => d.id === editingId);
+    if (existing) Object.assign(existing, fields);
+  } else {
+    state.deliverables.push(Object.assign({ id: uid() }, fields));
+  }
+  saveState();
+  resetForm();
+  render();
+  if (wasEditing) document.getElementById('list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  else document.getElementById('f-name-input').focus();
+}
+
+function resetForm() {
+  editingId = null;
+  document.getElementById('formTitle').textContent = 'Add content';
+  document.getElementById('submitBtn').textContent = '+ Add to inventory';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  ['f-name-input', 'f-duration', 'f-desc', 'f-location', 'f-depNotes', 'f-trainerNotes', 'f-neededBy', 'f-neededByReason', 'f-dep-search'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-duration-unit').value = 'min';
+  document.querySelectorAll('input[name="cond"], input[name="needs"]').forEach(r => { r.checked = false; });
+  ['f-name', 'f-cond', 'f-needs'].forEach(id => setInvalid(id, false));
+  selectedDeps = [];
+  renderDepChips();
+  updateLengthLabel();
+}
+function cancelEdit() { resetForm(); }
+
+function editItem(id) {
+  const item = state.deliverables.find(d => d.id === id);
+  if (!item) return;
+  resetForm();
+  editingId = id;
+  document.getElementById('formTitle').textContent = 'Editing: ' + item.name;
+  document.getElementById('submitBtn').textContent = 'Save changes';
+  document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+  document.getElementById('f-name-input').value = item.name;
+  document.getElementById('f-type').value = item.type || '';
+  document.getElementById('f-duration').value = item.duration || '';
+  document.getElementById('f-desc').value = item.desc || '';
+  document.getElementById('f-location').value = item.location || '';
+  document.getElementById('f-depNotes').value = item.depNotes || '';
+  document.getElementById('f-trainerNotes').value = item.trainerNotes || '';
+  document.getElementById('f-neededBy').value = item.neededBy || '';
+  document.getElementById('f-neededByReason').value = item.neededByReason || '';
+  const c = document.querySelector(`input[name="cond"][value="${item.condition}"]`); if (c) c.checked = true;
+  const n = document.querySelector(`input[name="needs"][value="${item.needsUpdate}"]`); if (n) n.checked = true;
+  selectedDeps = (item.dependsOn || []).slice();
+  renderDepChips();
+  updateLengthLabel();
+  document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function deleteItem(id) {
+  const item = state.deliverables.find(d => d.id === id);
+  if (!item) return;
+  const blockers = dependentsOf(id);
+  const extra = blockers.length ? `\n\n${blockers.map(b => b.name).join(', ')} ${blockers.length > 1 ? 'are' : 'is'} linked to this piece.` : '';
+  if (!confirm(`Remove "${item.name}"?${extra}`)) return;
+  state.deliverables = state.deliverables.filter(d => d.id !== id);
+  state.deliverables.forEach(d => { d.dependsOn = (d.dependsOn || []).filter(x => x !== id); });
+  if (!state.removedIds.includes(id)) state.removedIds.push(id);
+  openCards.delete(id);
+  if (editingId === id) resetForm();
+  saveState();
+  render();
+}
+
+function clearAll() {
+  if (!state.deliverables.length) return;
+  if (!confirm('Remove everything from this inventory and start over? Your designer will see these as removed the next time you send a file.')) return;
+  state.deliverables.forEach(d => { if (!state.removedIds.includes(d.id)) state.removedIds.push(d.id); });
+  state.deliverables = [];
+  openCards.clear();
+  resetForm();
+  saveState();
+  render();
+}
+
+// ─── DISPLAY ───────────────────────────────────────────────────────────────
+const COND = {
+  current:      ['b-green',  '✓ Current'],
+  minor:        ['b-blue',   'Minor updates'],
+  outdated:     ['b-orange', '⚠ Outdated'],
+  broken:       ['b-red',    '✕ Broken'],
+  doesnotexist: ['b-navy',   '🆕 Needs to be created'],
+};
+const NEEDS = {
+  'yes-urgent':     ['b-red',    'Urgent'],
+  'yes-soon':       ['b-orange', 'Soon'],
+  'yes-eventually': ['b-blue',   'When there\'s time'],
+  'no':             ['b-green',  'Leave it'],
+};
+const badge = (map, key) => map[key] ? `<span class="badge ${map[key][0]}">${map[key][1]}</span>` : '';
+
+let openCards = new Set();
+let filterText = '';
+let filterCond = '';
+function toggleCard(id) {
+  if (openCards.has(id)) openCards.delete(id); else openCards.add(id);
+  document.getElementById('body_' + id)?.classList.toggle('open', openCards.has(id));
+  document.getElementById('head_' + id)?.setAttribute('aria-expanded', openCards.has(id));
+}
+function setFilter() {
+  filterText = document.getElementById('searchBox').value.trim().toLowerCase();
+  filterCond = document.getElementById('condFilter').value;
+  renderList();
+}
+
+function render() {
+  const items = state.deliverables;
+  document.getElementById('countLabel').textContent = items.length ? `(${items.length})` : '';
+  const totalMins = items.reduce((s, i) => s + (i.duration || 0), 0);
+  document.getElementById('statsRow').innerHTML = items.length ? `
+    <div class="stats">
+      <div class="stat"><b>${items.length}</b>pieces</div>
+      <div class="stat"><b>${items.filter(i => i.condition === 'doesnotexist').length}</b>need to be created</div>
+      <div class="stat"><b>${items.filter(i => i.needsUpdate === 'yes-urgent').length}</b>urgent</div>
+      <div class="stat"><b>${Math.round(totalMins / 60 * 10) / 10}h</b>total length</div>
+    </div>` : '';
+  document.getElementById('listTools').innerHTML = items.length > 4 ? `
+    <div class="list-tools">
+      <input type="search" id="searchBox" placeholder="Search by name..." value="${esc(filterText)}" oninput="setFilter()" aria-label="Search inventory" />
+      <select id="condFilter" onchange="setFilter()" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        ${Object.entries(COND).map(([k, v]) => `<option value="${k}" ${filterCond === k ? 'selected' : ''}>${v[1]}</option>`).join('')}
+      </select>
+    </div>` : '';
+  if (items.length <= 4) { filterText = ''; filterCond = ''; }
+  document.getElementById('clearRow').innerHTML = items.length ? '<button class="btn-link" onclick="clearAll()">Clear everything</button>' : '';
+  renderList();
+  renderRefList();
+  renderChecks();
+}
+
+function renderList() {
+  const items = state.deliverables;
+  const list = document.getElementById('list');
+  if (!items.length) { list.innerHTML = '<div class="empty">Nothing here yet. Add your first piece of content above.</div>'; return; }
+  const shown = items.map((item, i) => ({ item, n: i + 1 }))
+    .filter(({ item }) => (!filterText || item.name.toLowerCase().includes(filterText)) && (!filterCond || item.condition === filterCond));
+  if (!shown.length) { list.innerHTML = '<div class="empty">No pieces match that search.</div>'; return; }
+  list.innerHTML = '<div class="item-list">' + shown.map(({ item, n }) => {
+    const deps = (item.dependsOn || []).map(id => { const p = pieceById(id); return p ? p.name + (p.own ? '' : ` (${p.by})`) : 'a piece that isn\'t loaded'; });
+    const blockers = dependentsOf(item.id).map(b => b.name + (b.own ? '' : ` (${b.by})`));
+    const linked = deps.length || blockers.length;
+    const open = openCards.has(item.id);
+    return `
+    <div class="item ${linked ? 'linked' : ''}">
+      <button type="button" class="item-head" id="head_${item.id}" aria-expanded="${open}" onclick="toggleCard('${item.id}')">
+        <div class="item-num">${n}</div>
+        <div class="item-name">${esc(item.name)}${item.type ? `<small>${esc(item.type)}</small>` : ''}</div>
+        <div class="item-badges">
+          ${badge(COND, item.condition)}
+          ${badge(NEEDS, item.needsUpdate)}
+          ${item.neededBy ? `<span class="badge b-red">⏰ ${esc(fmtDate(item.neededBy))}</span>` : ''}
+          ${missingDetails(item).length ? `<span class="badge gap">${missingDetails(item).length} detail${missingDetails(item).length > 1 ? 's' : ''} missing</span>` : ''}
+        </div>
+        <span class="caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="item-body ${open ? 'open' : ''}" id="body_${item.id}">
+        <div class="kv">
+          <div><span>Length</span>${fmtLen(item.duration) || '—'}</div>
+          <div><span>Where it lives</span>${esc(item.location) || '—'}</div>
+          <div><span>What it covers</span>${esc(item.desc) || '—'}</div>
+        </div>
+        ${item.neededBy ? `<div class="note warn"><strong>Hard deadline:</strong> ${esc(fmtDate(item.neededBy))}${item.neededByReason ? '. ' + esc(item.neededByReason) : ''}</div>` : ''}
+        ${linked ? `<div class="note warn">
+          ${deps.length ? `<strong>Comes after:</strong> ${deps.map(esc).join(', ')}<br>` : ''}
+          ${blockers.length ? `<strong>Needed before:</strong> ${blockers.map(esc).join(', ')}<br>` : ''}
+          ${item.depNotes ? esc(item.depNotes) : ''}
+        </div>` : ''}
+        ${missingDetails(item).length ? `<div class="note"><strong>Still needed:</strong> ${missingDetails(item).join(', ')}. Click Edit to add.</div>` : ''}
+        ${item.trainerNotes ? `<div class="note"><strong>Notes:</strong> ${esc(item.trainerNotes)}</div>` : ''}
+        <div class="item-actions">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')">Edit</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem('${item.id}')">Remove</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// Friendly reminders before sending. Never blocks the download.
+function renderChecks() {
+  const items = state.deliverables;
+  const el = document.getElementById('checkResults');
+  if (!items.length) { el.innerHTML = '<div class="banner blue">Add at least one piece before you send your file.</div>'; return; }
+  const notes = [];
+  if (!state.meta.trainerName.trim()) notes.push('Add your name at the top so the design team knows whose file this is.');
+  if (!state.meta.programName.trim()) notes.push('Add the program name at the top.');
+  const gapCount = { 'type': 0, 'length': 0, 'what it covers': 0, 'where it lives': 0 };
+  items.forEach(i => missingDetails(i).forEach(g => gapCount[g]++));
+  const gapText = Object.entries(gapCount).filter(([, n]) => n).map(([g, n]) => `${n} missing ${g}`);
+  if (gapText.length) notes.push(`Some pieces are missing details the design team uses to estimate time: ${gapText.join(', ')}. Best guesses are fine.`);
+  const dangling = items.filter(i => (i.dependsOn || []).some(id => !pieceById(id))).length;
+  if (dangling) notes.push(`${dangling} piece${dangling > 1 ? 's are' : ' is'} linked to something that isn't loaded. Load your teammate's file, or remove the link.`);
+  const cycles = findCycles();
+  if (cycles.length) notes.push('These pieces are linked in a loop: ' + cycles.map(c => c.map(id => (pieceById(id) || {}).name || '?').join(' → ')).join('; ') + '.');
+  el.innerHTML = notes.length
+    ? `<div class="banner"><strong>Worth a look before you send:</strong><ul>${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>`
+    : '<div class="banner green">Looks complete. Download your file when you\'re ready.</div>';
+}
+
+function findCycles() {
+  const cycles = [], seen = new Set();
+  const byId = Object.fromEntries(state.deliverables.map(d => [d.id, d]));
+  function walk(start, cur, path) {
+    if (path.includes(cur)) { if (cur === start && path.length > 1) cycles.push([...path]); return; }
+    const item = byId[cur];
+    if (!item) return;
+    (item.dependsOn || []).forEach(n => walk(start, n, [...path, cur]));
+  }
+  state.deliverables.forEach(d => walk(d.id, d.id, []));
+  return cycles.filter(c => { const k = [...c].sort().join(','); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+// ─── EXPORT ────────────────────────────────────────────────────────────────
+function exportFile() {
+  const fb = document.getElementById('exportFeedback');
+  if (!state.deliverables.length) { fb.innerHTML = '<div class="banner red">Nothing to download yet. Add a piece first.</div>'; return; }
+  const safe = s => (s || '').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  const name = `Inventory_${safe(state.meta.programName) || 'Program'}_${safe(state.meta.trainerName) || 'Name'}_${nowISO().slice(0, 10)}.json`;
+  const payload = {
+    format: FORMAT_NAME, version: 1, exportedAt: nowISO(),
+    trainer: state.meta.trainerName || '',
+    program: { name: state.meta.programName || '', length: state.meta.programLength || '', audience: state.meta.audience || '' },
+    deliverables: state.deliverables,
+    removedIds: state.removedIds,
+  };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.style.display = 'none';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  fb.innerHTML = `<div class="banner green">Downloaded <strong>${esc(name)}</strong>. Send it to your designer.</div>`;
+}
+
+// ─── OPEN A SAVED FILE / TEAMMATE FILES ────────────────────────────────────
+function readFile(f) {
+  return new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = () => reject(new Error('Could not read ' + f.name)); r.readAsText(f); });
+}
+async function parseInventoryFile(f) {
+  let data;
+  try { data = JSON.parse(await readFile(f)); } catch (e) { throw new Error(`${f.name} isn't a readable inventory file.`); }
+  if (!data || data.format !== FORMAT_NAME || !Array.isArray(data.deliverables)) throw new Error(`${f.name} isn't an inventory file from this tool.`);
+  return data;
+}
+function fileFeedback(type, msg) { document.getElementById('fileFeedback').innerHTML = `<div class="banner ${type}">${esc(msg)}</div>`; }
+
+async function restoreFromFile(input) {
+  const f = input.files[0];
+  if (!f) return;
+  try {
+    const data = await parseInventoryFile(f);
+    if (state.deliverables.length && !confirm('This replaces everything on this page with what\'s in the file. Continue?')) { input.value = ''; return; }
+    state.meta.programName = (data.program && data.program.name) || '';
+    state.meta.programLength = (data.program && data.program.length) || '';
+    state.meta.audience = (data.program && data.program.audience) || '';
+    state.meta.trainerName = data.trainer || state.meta.trainerName;
+    state.deliverables = data.deliverables;
+    state.removedIds = data.removedIds || [];
+    openCards.clear();
+    saveState(); loadMetaIntoForm(); resetForm(); render();
+    fileFeedback('green', `Opened ${data.deliverables.length} piece${data.deliverables.length === 1 ? '' : 's'} from ${f.name}.`);
+  } catch (e) { fileFeedback('red', e.message); }
+  input.value = '';
+}
+
+async function loadReferenceFiles(input) {
+  const files = [...input.files];
+  const msgs = [];
+  for (const f of files) {
+    try {
+      const data = await parseInventoryFile(f);
+      const who = data.trainer || 'a teammate';
+      if (who === state.meta.trainerName && state.meta.trainerName) { msgs.push(`${f.name} looks like your own file. Use "Pick up where you left off" for that.`); continue; }
+      state.references = (state.references || []).filter(r => r.trainer !== who);
+      state.references.push({ trainer: who, programName: (data.program && data.program.name) || '', loadedAt: nowISO(), deliverables: data.deliverables.map(d => ({ id: d.id, name: d.name, dependsOn: d.dependsOn || [] })) });
+    } catch (e) { msgs.push(e.message); }
+  }
+  saveState(); render();
+  if (msgs.length) fileFeedback('red', msgs.join(' '));
+  else if (files.length) fileFeedback('green', 'Loaded. Their pieces now show up when you link content.');
+  input.value = '';
+}
+function removeReference(idx) { state.references = (state.references || []).filter((r, i) => i !== idx); saveState(); render(); }
+function renderRefList() {
+  const refs = state.references || [];
+  document.getElementById('refList').innerHTML = refs.length ? '<div style="margin-top:14px"><div class="label">Teammate files loaded</div>' + refs.map((r, idx) => `
+    <div class="ref-row">
+      <span><strong>${esc(r.trainer)}</strong> · ${r.deliverables.length} piece${r.deliverables.length === 1 ? '' : 's'}${r.programName ? ' · ' + esc(r.programName) : ''}</span>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="removeReference(${idx})">Remove</button>
+    </div>`).join('') + '</div>' : '';
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+state = loadState();
+loadMetaIntoForm();
+renderDepChips();
+showStorageWarning();
+render();
+</script>
+</body>
+</html>
